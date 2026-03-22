@@ -1,8 +1,18 @@
+use colored;
 use std::env;
 use std::io::{self, Write};
 use std::thread;
 use sysinfo::System;
 
+enum Language {
+    English,
+    Russian,
+    Japanise,
+}
+
+struct Massages {
+    msg_death: &'static str,
+}
 fn main() {
     // sysinfo
     let mut sys = System::new_all();
