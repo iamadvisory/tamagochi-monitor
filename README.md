@@ -6,8 +6,7 @@
 
   * **Real-time Status**: Your pet's face and "mood" react to CPU usage.
   * **HP System**: High CPU load (\>90%) damages your pet. If HP hits 0, it's game over\!
-  * **Gentoo Mode**: A special easter egg for those who spend their lives compiling `@world`.
-  * **Localization**: English by default, Russian via flag.
+  * **Localization**: English by default, Russian (--lang ru) and Japanese (--lang jp) via flag.
 
 ## 🚀 Installation
 
@@ -25,12 +24,12 @@ To install this as a global system utility:
 Once installed, run it from anywhere in your terminal:
 
 ```bash
-tamagotchi-monitor --lang ru --gentoo
+tamagotchi-monitor --lang jp --gentoo
 ```
 
 ### Available Flags:
 
-  * `--lang ru` — Switch to Russian language.
+  * `--lang ru/jp` — Switch to Russian/Japanese language.
   * `--gentoo` — Enable the Gentoo "compiling" mode.
 
 
@@ -45,8 +44,7 @@ tamagotchi-monitor --lang ru --gentoo
 
   * **Состояние в реальном времени**: Лицо питомца и его «настроение» меняются в зависимости от нагрузки на CPU.
   * **Система выживания (HP)**: При нагрузке \>90% питомец теряет здоровье. Если HP упадет до 0 — игра окончена.
-  * **Режим Gentoo**: Специальная пасхалка для тех, кто любит суровую компиляцию.
-  * **Двуязычность**: Поддержка флага `--lang ru`.
+  * **Локализация**: Поддержка флага `--lang ru` и `--lang jp`.
 
 ## 🚀 Установка
 
@@ -69,5 +67,5 @@ tamagotchi-monitor --lang ru --gentoo
 
 ### Доступные флаги:
 
-  * `--lang ru` — Включить русский интерфейс.
+  * `--lang ru/jp` — Включить русский/японский интерфейс.
   * `--gentoo` — Включить сочувствие при компиляции тяжелых пакетов.
