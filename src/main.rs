@@ -79,7 +79,6 @@ fn main() {
     let mut hp = 100;
     let args: Vec<String> = env::args().collect();
 
-    // Определение языка
     let mut lang_choice = Language::English;
     if let Some(pos) = args.iter().position(|r| r == "--lang") {
         if let Some(value) = args.get(pos + 1) {
