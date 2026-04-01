@@ -4,6 +4,7 @@ use std::io::{self, Write};
 use std::thread;
 use sysinfo::System;
 
+#[derive(Clone, Copy)]
 enum Language {
     English,
     Russian,
@@ -16,7 +17,7 @@ struct Messages {
     msg_mood: &'static str,
     hi: &'static str,
     call: &'static str,
-    errrl: &'static str,
+    err_read: &'static str,
     nm: &'static str,
     gentoo_lang: &'static str,
     mood_sleeping: &'static str,
@@ -34,11 +35,11 @@ impl Messages {
                 msg_mood: "Состояние",
                 hi: "Привет! Это тамагочи-монитор!",
                 call: "Назови своего тамагочи: ",
-                errrl: "Error: не удалось прочитать строку!!!",
+                err_read: "Ошибка: не удалось прочитать строку!",
                 nm: "Имя:",
                 gentoo_lang: "(Ты там @world компилируешь?)",
-                mood_sleeping: "сон...",
-                mood_ok: "ладно...",
+                mood_sleeping: "спит...",
+                mood_ok: "в норме",
                 mood_hard: "тяжело...",
                 mood_help: "ПОМОГИТЕ",
             },
@@ -47,8 +48,8 @@ impl Messages {
                 msg_cpu: "CPU",
                 msg_mood: "Mood",
                 hi: "Hi! It's tamagochi-monitor!",
-                call: "Call your tamagochi: ",
-                errrl: "Error: failed to read line!!!",
+                call: "Name your tamagochi: ",
+                err_read: "Error: failed to read line!",
                 nm: "Name:",
                 gentoo_lang: "(Are you compiling @world there?)",
                 mood_sleeping: "sleeping...",
@@ -61,8 +62,8 @@ impl Messages {
                 msg_cpu: "CPU使用率",
                 msg_mood: "気分",
                 hi: "こんにちは！たまごっちモニターへようこそ！",
-                call: "たまгоっちの名前を決めてね：",
-                errrl: "エラー：行の読み込みに失敗しました！！！",
+                call: "たまごっちの名前を決めてね：",
+                err_read: "エラー：行の読み込みに失敗しました！",
                 nm: "名前:",
                 gentoo_lang: "(@world をコンパイル中ですか？)",
                 mood_sleeping: "眠い...",
@@ -74,9 +75,13 @@ impl Messages {
     }
 }
 
+fn clear_screen() {
+    print!("\x1B[2J\x1B[H");
+}
+
 fn main() {
     let mut sys = System::new_all();
-    let mut hp = 100;
+    let mut hp: i32 = 100;
     let args: Vec<String> = env::args().collect();
 
     let mut lang_choice = Language::English;
@@ -91,9 +96,9 @@ fn main() {
     }
 
     let msgs = Messages::new(lang_choice);
-    let is_gen = args.contains(&"--gentoo".to_string());
-    let gentoo = if is_gen {
-        msgs.gentoo_lang.italic().dimmed().to_string()
+    let is_gentoo = args.iter().any(|arg| arg == "--gentoo");
+    let gentoo_suffix = if is_gentoo {
+        format!(" {}", msgs.gentoo_lang.italic().dimmed())
     } else {
         "".to_string()
     };
@@ -102,26 +107,30 @@ fn main() {
     print!("{}", msgs.call.yellow());
     io::stdout().flush().unwrap();
 
-    let mut input_name = String::new();
-    io::stdin().read_line(&mut input_name).expect(msgs.errrl);
-    let name = input_name.trim();
+    let mut name = String::new();
+    io::stdin().read_line(&mut name).expect(msgs.err_read);
+    let name = name.trim();
 
     loop {
-        print!("\x1B[2J\x1B[H");
-
         sys.refresh_cpu_all();
         thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
         let usage = sys.global_cpu_usage();
 
         if usage > 90.0 {
-            hp -= 2;
-        } else if usage < 20.0 && hp < 100 {
-            hp += 1;
+            hp = (hp - 2).max(0);
+        } else if usage < 20.0 {
+            hp = (hp + 1).min(100);
         }
 
+        clear_screen();
+
         if hp <= 0 {
-            print!("\x1B[2J\x1B[H");
-            println!("( x _ x ) {} {}", msgs.msg_death.red().bold(), gentoo);
+            println!(
+                "{} {} {}",
+                "( x _ x )".red(),
+                msgs.msg_death.red().bold(),
+                gentoo_suffix
+            );
             break;
         }
 
@@ -132,25 +141,25 @@ fn main() {
             _ => ("( x _ x )", msgs.mood_help.red().blink()),
         };
 
+        let border = "------------------------------";
         if usage > 90.0 {
-            println!("{}", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".red());
-            println!("!!      {}      !!", face.red());
-            println!("{}", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!".red());
+            println!("{}", border.red());
+            println!("!! {:^24} !!", face.red());
+            println!("{}", border.red());
         } else {
-            println!("------------------------------");
-            println!("|      {}      |", face.cyan());
-            println!("------------------------------");
+            println!("{}", border.cyan());
+            println!("|  {:^24}  |", face.cyan());
+            println!("{}", border.cyan());
         }
 
         let filled = (hp / 10).max(0) as usize;
         let empty = 10 - filled;
-        let bar_str = format!("[{}{}]", "#".repeat(filled), "-".repeat(empty));
-        let bar_colored = if hp > 70 {
-            bar_str.green()
-        } else if hp > 30 {
-            bar_str.yellow()
-        } else {
-            bar_str.red()
+        let bar = format!("[{}{}]", "#".repeat(filled), "-".repeat(empty));
+
+        let bar_colored = match hp {
+            h if h > 70 => bar.green(),
+            h if h > 30 => bar.yellow(),
+            _ => bar.red(),
         };
 
         println!("HP: {} {}/100", bar_colored, hp);
